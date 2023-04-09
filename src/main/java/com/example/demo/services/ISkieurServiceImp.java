@@ -1,6 +1,8 @@
 package com.example.demo.services;
 
 import com.example.demo.entities.*;
+import com.example.demo.repositories.AbonnementRepository;
+import com.example.demo.repositories.InscriptionRepository;
 import com.example.demo.repositories.PisteRepository;
 import com.example.demo.repositories.SkieurRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.Date;
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ISkieurServiceImp implements ISkieurService{
@@ -17,6 +19,9 @@ public class ISkieurServiceImp implements ISkieurService{
     @Autowired //(t3awedh = new SkieurRepository ) creer instance automatique
    private   SkieurRepository skieurRepository  ;
     private final PisteRepository pisteRepository;
+    private  AbonnementRepository abonnementRepository;
+private  InscriptionRepository inscriptionRepository ;
+    private ICoursService coursService;
 
     @Override
     public List<Skieur> retrieveAllSkieurs() {
@@ -60,28 +65,25 @@ public class ISkieurServiceImp implements ISkieurService{
 
 
 
-    Skieur addSkierAndAssignToCourse(Skieur skieur) {
-        // Créer un nouvel abonnement pour le skieur
-        Abonnement abonnement = new Abonnement();
-        abonnement.setDateDebut(new Date());
-        abonnement.setSkieur(skieur);
-        // Enregistrer l'abonnement dans la base de données
-        numAbon.save(abonnement);
-
-        // Créer une nouvelle inscription pour le skieur
-        Inscription inscription = new Inscription();
-        inscription.setDateInscription(new Date());
-        inscription.setSkieur(skieur);
-        // Enregistrer l'inscription dans la base de données
-        numInscription.save(inscription);
-
-        // Affecter le skieur à un cours
-        Cours cours = coursDao.findCoursDisponible();
-        cours.getInscriptions();
-        // Enregistrer le cours dans la base de données
-        numCours.save(cours);
-        return skieur;
+    @Override
+    public Skieur addSkierAndAssignToCourse(Skieur skieur) {
+        //Créer Abonnement
+        Abonnement a = skieur.getAbonnement();
+        if(a != null && skieur.getInscriptions() != null){
+            abonnementRepository.save(a);
+            inscriptionRepository.saveAll(skieur.getInscriptions());
+            return skieurRepository.save(skieur);}
+        return null;
     }
 
 
-}
+
+    @Override
+    public List<Skieur> retrieveSkiersBySubscriptionType(TypeAbonnement typeAbonnement) {
+        //return getAll().stream().filter(skieur -> skieur.getAbonnement().getTypeAbon()== typeAbonnement).collect(Collectors.toList());
+       return skieurRepository.findByAbonnementTypeAbon(typeAbonnement);
+    }
+    }
+
+
+
